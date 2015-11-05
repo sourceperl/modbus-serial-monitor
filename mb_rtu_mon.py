@@ -14,8 +14,7 @@
 #   RS-232
 
 # CSV out sample :
-# DATE=2015-11-05T15:08:25.220;FRAME=11-03-00-00-00-04-46-99;CRC=OK; /
-# CRC_VAL=0x9946;SLAVE=0x11;FC=0x03;
+# DATE=2015-11-05T17:31:27.977;ERR=NO;FRAME=01-03-50-00-00-04-55-09;SLAVE=1;
 
 # use it like this :
 #   - see frame only for slave 17 :
@@ -31,6 +30,7 @@ from datetime import datetime
 # some const 
 DEVICE = '/dev/ttyUSB0'
 BAUDRATE = 9600
+TIMEOUT = 0.0037 # 3.7ms for 9600 bauds
 SEP = ";"
 
 def frame2crc(frame):
@@ -56,7 +56,7 @@ def frame2crc(frame):
 ser = serial.Serial(DEVICE, BAUDRATE)
 
 # serial timeout = modbus end of frame (3.5 * byte tx time)
-ser.timeout = (10.0/ser.baudrate) * 3.5
+ser.timeout = TIMEOUT
 
 while True:
     # maximum size of modbus RTU frame is 256 bytes
@@ -64,38 +64,41 @@ while True:
     # for null size (no data)
     if not frame:
       continue
-    # csv line output
-    csv_line = ''
+    # init vars
+    err_str = "NO"
+    slave_id = 0
+    f_code = 0
+    e_code = 0
     # add date and time
     now = datetime.now()
-    csv_line += "DATE=" + now.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + SEP
+    date = now.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
     # format modbus frame as txt string
     txt_frame = ''
     for item in bytearray(frame):
         if txt_frame:
             txt_frame += "-"
         txt_frame += "%02x" % item
-    csv_line += "FRAME=" + txt_frame + SEP
     # check short frame
     if len(frame) >= 5:
         # check CRC
         r_crc = struct.unpack("<H", frame[-2:])[0]
         c_crc = frame2crc(frame[:-2])
         crc_ok = (r_crc == c_crc)
-        if crc_ok:
-            csv_line += "CRC=OK" + SEP
-        else:
-            csv_line += "CRC=KO" + SEP
-        csv_line += "CRC_VAL=0x%04x" % c_crc + SEP
-        # slave ID
-        slave_id = struct.unpack("B", frame[0:1])[0]
-        csv_line += "SLAVE=0x%02x" % slave_id + SEP
-        # function code
-        f_code = struct.unpack("B", frame[1:2])[0]
-        csv_line += "FC=0x%02x" % f_code + SEP
+        if not crc_ok:
+            err_str = "BAD_CRC"
+        else :
+            # slave ID
+            slave_id = struct.unpack("B", frame[0:1])[0]
+            # function code
+            f_code = struct.unpack("B", frame[1:2])[0]
+            # except code
+            if f_code > 0x80:
+                err_str = "EXCEPT_FRAME"
+                e_code = struct.unpack("B", frame[2:3])[0]
     else:
-        csv_line += "ERROR='short frame'" + SEP
-
+        err_str = "SHORT_FRAME"
+    # out result
+    csv_line = ("DATE={0}"+SEP+"ERR={1}"+SEP+"FRAME={2}"+SEP+"SLAVE={3}"+SEP).format(date, err_str, txt_frame, slave_id)
     print(csv_line)
     sys.stdout.flush()
        
