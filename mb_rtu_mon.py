@@ -5,7 +5,7 @@
 # modbus/RTU python monitor (check serial frame between devices)
 
 # format modbus RTU serial frame receive from a serial port to console stdout
-# check with python2.7 and python3, and module serial 2.6
+# check with python2.7 and python3, and module serial 2.6 (don't work with 3.x timeout issue ?)
 
 # synoptic :
 #
@@ -65,23 +65,20 @@ if __name__ == '__main__':
                         help='serial baudrate (default is 9600)')
     args = parser.parse_args()
 
+    # modbus end of frame is a tx silent of [3.5 * byte tx time + 12% margin] seconds
+    inter_char_wait = (1.0 / args.baudrate) * 11.0 * 3.5 * 1.12
+
     # init serial object
-    ser = serial.Serial(args.device, args.baudrate)
+    ser = serial.Serial(args.device, args.baudrate, timeout=inter_char_wait)
 
-    # serial timeout = modbus end of frame (3.5 * byte tx time + 10% margin)
-    ser.timeout = (1.0 / args.baudrate) * 11 * 3.5 * 1.10
-
-    # flush all
-    ser.flushInput()
-
-    # first read (used for sync to frame, avoid bad CRC)
-    ser.read(256)
+    # wait serial start and flush all
+    time.sleep(.5)
+    ser.read(ser.inWaiting())
 
     # main loop
     while True:
-        # maximum size of modbus RTU frame is 256 bytes
-        frame = ser.read(256)
-        # for null size (no data)
+        frame = bytes(ser.read(256))
+        # skip null frame
         if not frame:
             continue
         # init vars
