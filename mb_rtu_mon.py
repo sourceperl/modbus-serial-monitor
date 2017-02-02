@@ -65,8 +65,8 @@ if __name__ == '__main__':
                         help='serial baudrate (default is 9600)')
     args = parser.parse_args()
 
-    # modbus end of frame is a tx silent of [3.5 * byte tx time + 12% margin] seconds
-    inter_char_wait = (1.0 / args.baudrate) * 11.0 * 3.5 * 1.12
+    # modbus end of frame is a tx silent of [3.5 * byte tx time + 30% margin] seconds
+    inter_char_wait = (1.0 / args.baudrate) * 11.0 * 3.5 * 1.30
 
     # init serial object
     ser = serial.Serial(args.device, args.baudrate, timeout=inter_char_wait)
