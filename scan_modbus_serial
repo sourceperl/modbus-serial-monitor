@@ -34,6 +34,9 @@ from datetime import datetime
 
 # some const 
 SEP = ";"
+PARITY = {'N': serial.PARITY_NONE, 'E': serial.PARITY_EVEN, 'O': serial.PARITY_ODD,
+          'M': serial.PARITY_MARK, 'S': serial.PARITY_SPACE}
+STOP = {'1': serial.STOPBITS_ONE, '1.5': serial.STOPBITS_ONE_POINT_FIVE, '2': serial.STOPBITS_TWO}
 
 
 def frame2crc(frame):
@@ -60,16 +63,23 @@ if __name__ == '__main__':
     # parse args
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--device', type=str, default='/dev/ttyUSB0',
-                        help='serial device (default is /dev/ttyUSB0)')
+                        help='device (default is /dev/ttyUSB0)')
     parser.add_argument('-b', '--baudrate', type=int, default=9600,
-                        help='serial baudrate (default is 9600)')
+                        help='baudrate (default is 9600)')
+    parser.add_argument('-p', '--parity', type=str, default='N', choices=['N', 'E', 'O', 'M', 'S'],
+                        help='parity (default is N)')
+    parser.add_argument('-s', '--stop', type=str, default='1', choices=['1', '1.5', '2'],
+                        help='stop (default is 1)')
     args = parser.parse_args()
+
+    # parity
 
     # modbus end of frame is a tx silent of [3.5 * byte tx time + 30% margin] seconds
     inter_char_wait = (1.0 / args.baudrate) * 11.0 * 3.5 * 1.30
 
     # init serial object
-    ser = serial.Serial(args.device, args.baudrate, timeout=inter_char_wait)
+    ser = serial.Serial(args.device, args.baudrate, parity=PARITY[args.parity], stopbits=STOP[args.stop],
+                        timeout=inter_char_wait)
 
     # wait serial start and flush all
     time.sleep(.5)
