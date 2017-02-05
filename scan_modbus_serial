@@ -5,7 +5,7 @@
 # modbus/RTU python monitor (check serial frame between devices)
 
 # format modbus RTU serial frame receive from a serial port to console stdout
-# check with python2.7 and python3, and module serial 2.6 (don't work with 3.x timeout issue ?)
+# check with python2.7 and python3, and module serial 2.7 (don't work with 3.x timeout issue ?)
 
 # synoptic :
 #
