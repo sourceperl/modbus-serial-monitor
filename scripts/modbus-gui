@@ -4,6 +4,10 @@ import tkinter as tk
 from tkinter import ttk
 import os
 
+# some const
+DEV_ID2NAME = {'RS232': 'RS232', 'RS485': 'RS485', 'RS422': 'RS422',
+               'usb-Arduino': 'Arduino', 'FTDI_UT232R': 'RS232 DB9'}
+
 
 class Tab(tk.Frame):
     def __init__(self, notebook, update_ms=500, *args, **kwargs):
@@ -64,7 +68,7 @@ class Tab1(Tab):
         self.stop = tk.StringVar()
         self.stop.set('1')
         self.stop.trace('w', self.update_command)
-        self.cmd_cap = ''
+        self.cmd_cap = tk.StringVar()
         # widget
         self.frm = tk.Frame(self)
         self.frm.pack(fill=tk.BOTH, expand=tk.YES)
@@ -100,11 +104,12 @@ class Tab1(Tab):
         tk.Radiobutton(self.lbfrm4, text='1.5', variable=self.stop, value='1.5').pack(anchor=tk.W)
         tk.Radiobutton(self.lbfrm4, text='2', variable=self.stop, value='2').pack(anchor=tk.W)
         # command area
-        self.lbl4 = tk.Label(self.frm, text='', bg='pale green')
-        self.lbl4.grid(row=3, columnspan=3, sticky=tk.NSEW)
+        self.ent1 = tk.Entry(self.frm, width=60, state='readonly', textvariable=self.cmd_cap, readonlybackground='pale green')
+        self.ent1.grid(row=3, columnspan=3, sticky=tk.NSEW)
         # start command
         self.but1 = tk.Button(self.frm, text='Lancer la capture', state='disabled',
-                              command=lambda: os.system('xterm -e %s &' % self.cmd_cap))
+                              command=lambda: os.system('xterm -title \'Capture modbus\' -e \'%s\' &'
+                                                        % self.cmd_cap.get()))
         self.but1.grid(row=4, columnspan=3, sticky=tk.NSEW)
 
     def tab_update(self):
@@ -126,34 +131,34 @@ class Tab1(Tab):
                 self.l_lst1_serial.append({'dev': d, 'type': 'n/a'})
                 i = len(self.l_lst1_serial) - 1
                 # device type (RS232/485...) from link name
-                if 'RS232' in self.d_serial_dev[d]:
-                    self.l_lst1_serial[i]['type'] = 'RS232'
-                elif 'RS485' in self.d_serial_dev[d]:
-                    self.l_lst1_serial[i]['type'] = 'RS485'
-                elif 'RS422' in self.d_serial_dev[d]:
-                    self.l_lst1_serial[i]['type'] = 'RS422'
+                for d_id in DEV_ID2NAME:
+                    if d_id in self.d_serial_dev[d]:
+                        self.l_lst1_serial[i]['type'] = DEV_ID2NAME[d_id]
                 # add "device (device type)" to widget
                 self.lst1.insert(i, '%s (%s)' % (d, self.l_lst1_serial[i]['type']))
 
     def on_dev_select(self, event):
-        index = self.lst1.curselection()[0]
         try:
+            index = self.lst1.curselection()[0]
             self.device.set(self.l_lst1_serial[index]['dev'])
         except IndexError:
             pass
 
     def update_command(self, *args):
+        # if just one device on dev list: take this as default
+        if len(self.d_serial_dev) == 1:
+            self.device.set(list(self.d_serial_dev)[0])
         # update cmd cap
-        self.cmd_cap = 'scan_modbus_serial -d %s' % self.device.get()
+        self.cmd_cap.set('modbus-scan-serial -d %s' % self.device.get())
         # add params if not as default
         if self.baudrate.get() != '9600':
-            self.cmd_cap += ' -b %s' % self.baudrate.get()
+            self.cmd_cap.set(self.cmd_cap.get() + ' -b %s' % self.baudrate.get())
         if self.parity.get() != 'N':
-            self.cmd_cap += ' -p %s' % self.parity.get()
+            self.cmd_cap.set(self.cmd_cap.get() + ' -p %s' % self.parity.get())
         if self.stop.get() != '1':
-            self.cmd_cap += ' -s %s' % self.stop.get()
-
-        self.lbl4.configure(text=self.cmd_cap)
+            self.cmd_cap.set(self.cmd_cap.get() + ' -s %s' % self.stop.get())
+        self.ent1.delete(0, tk.END)
+        self.ent1.insert(0, self.cmd_cap)
         # valid button if cmd cap ok
         if self.cmd_cap:
             self.but1.configure(state='normal')

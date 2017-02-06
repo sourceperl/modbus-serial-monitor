@@ -6,7 +6,7 @@ with open('requirements.txt') as f:
     required = f.read().splitlines()
 
 setup(
-    name='modbus-serial-monitor',
+    name='modbus_serial_monitor',
     version='0.0.1',
     description='A set of tools for modbus diagnostic',
     long_description='',
@@ -17,6 +17,7 @@ setup(
     platforms='any',
     install_requires=required,
     scripts=[
-        'scan_modbus_serial',
+        'scripts/modbus-scan-serial',
+        'scripts/modbus-gui',
     ],
 )
