@@ -19,10 +19,19 @@ DATE=2015-11-05T17:31:27.977;ERR=NO;FRAME=01-03-50-00-00-04-55-09;SLAVE=1;
 
 ## Use it
 
+Setup
+
+    $ sudo python3 setup.py install
+
+Help
+
+    $ modbus-scan-serial -h
+
 See frame only for slave 1
 
-    $ ./mb_rtu_mon.py | grep SLAVE=1
+    $ modbus-scan-serial -d /dev/ttyUSB2 | grep SLAVE=1
 
 Store all traffic on modbus.log file
 
-    $ ./mb_rtu_mon.py > modbus.log
+    $ modbus-scan-serial > modbus.log
+
