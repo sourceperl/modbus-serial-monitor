@@ -18,6 +18,7 @@ setup(
     install_requires=required,
     scripts=[
         'scripts/modbus-scan-serial',
+        'scripts/modbus-request-serial',
         'scripts/modbus-gui',
     ],
 )

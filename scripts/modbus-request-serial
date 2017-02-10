@@ -1,0 +1,143 @@
+#!/usr/bin/env python3
+
+# home : https://github.com/sourceperl/modbus-serial-monitor
+
+# modbus/RTU python request
+
+# format modbus RTU serial frame receive from a serial port to console stdout
+# check with python2.7 and python3, and module serial 2.7 (don't work with 3.x timeout issue ?)
+
+import argparse
+import minimalmodbus
+from minimalmodbus import serial
+import time
+import sys
+
+# some const 
+SEP = ";"
+PARITY = {'N': serial.PARITY_NONE, 'E': serial.PARITY_EVEN, 'O': serial.PARITY_ODD,
+          'M': serial.PARITY_MARK, 'S': serial.PARITY_SPACE}
+STOP = {'1': serial.STOPBITS_ONE, '1.5': serial.STOPBITS_ONE_POINT_FIVE, '2': serial.STOPBITS_TWO}
+
+
+def check_slave_ad(value):
+    ivalue = int(value)
+    if 1 > ivalue:
+        raise argparse.ArgumentTypeError("%s address must be great or equal 1" % value)
+    if 255 <= ivalue:
+        raise argparse.ArgumentTypeError("%s address must be lower or equal 255" % value)
+    return ivalue
+
+
+def check_address(value):
+    ivalue = int(value)
+    if 0 > ivalue:
+        raise argparse.ArgumentTypeError("%s address must be great or equal 0" % value)
+    if 65535 <= ivalue:
+        raise argparse.ArgumentTypeError("%s address must be lower or equal 65535" % value)
+    return ivalue
+
+
+def check_f_code(value):
+    ivalue = int(value)
+    if ivalue not in [1, 2, 3, 4, 5, 6]:
+        raise argparse.ArgumentTypeError("%s not supported function code" % value)
+    return ivalue
+
+
+def check_number(value):
+    ivalue = int(value)
+    if 0 > ivalue:
+        raise argparse.ArgumentTypeError("%s number must be great or equal 0" % value)
+    if 65535 <= ivalue:
+        raise argparse.ArgumentTypeError("%s number must be lower or equal 65535" % value)
+    return ivalue
+
+
+def check_bit(value):
+    ivalue = int(value)
+    if ivalue not in [0, 1]:
+        raise argparse.ArgumentTypeError("%s bit value must be 0 or 1" % value)
+    return bool(ivalue)
+
+
+def check_word(value):
+    ivalue = int(value)
+    if not (0 <= ivalue <= 65535):
+        raise argparse.ArgumentTypeError("%s word value must be between 0 and 65535" % value)
+    return ivalue
+
+
+if __name__ == '__main__':
+    # parse args
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--device', type=str, default='/dev/ttyUSB0',
+                        help='device (default is /dev/ttyUSB0)')
+    parser.add_argument('-b', '--baudrate', type=int, default=9600,
+                        help='baudrate (default is 9600)')
+    parser.add_argument('-p', '--parity', type=str, default='N', choices=['N', 'E', 'O', 'M', 'S'],
+                        help='parity (default is N)')
+    parser.add_argument('--bit-stop', type=str, default='1', choices=['1', '1.5', '2'],
+                        help='stop (default is 1)')
+    parser.add_argument('-f', '--function', type=check_f_code, default=1,
+                        help='function code (default is 1)')
+    parser.add_argument('-s', '--slave', type=check_slave_ad, default=1,
+                        help='slave address (default is 1)')
+    parser.add_argument('-a', '--address', type=check_address, default=0,
+                        help='modbus address (default is 0)')
+    parser.add_argument('-n', '--number', type=check_number, default=1,
+                        help='modbus number to read (default is 1)')
+    parser.add_argument('--bit-value', type=check_bit, default=None,
+                        help='bit value to write')
+    parser.add_argument('--word-value', type=check_word, default=None,
+                        help='word value to write')
+    parser.add_argument('-w', '--wait', type=float, default=0.0,
+                        help='wait time between open serial port and request (default is 0)')
+    parser.add_argument('--debug', action='store_true', default=False,
+                        help='print debug messages')
+    args = parser.parse_args()
+
+    # init slave object
+    slave = minimalmodbus.Instrument(args.device, args.slave)
+    slave.serial.baudrate = args.baudrate
+    slave.serial.parity = PARITY[args.parity]
+    slave.stopbits = STOP[args.bit_stop]
+
+    # debug mode
+    if args.debug:
+        slave.debug = True
+
+    # wait time after serial open
+    time.sleep(args.wait)
+
+    # do modbus stuff
+    if args.function in [1, 2]:
+        if args.number != 1:
+            raise argparse.ArgumentTypeError('function 1 or 2 are for 1 bit only')
+        try:
+            result = slave.read_bit(args.address, functioncode=args.function)
+            print(result)
+        except ValueError:
+            sys.exit('bit read error')
+    elif args.function in [3, 4]:
+        try:
+            result = slave.read_registers(args.address, args.number, functioncode=args.function)
+            print(result)
+        except ValueError:
+            sys.exit('word read error')
+    elif args.function == 5:
+        if args.bit_value is None:
+            raise argparse.ArgumentTypeError('bit-value must be set for function 5 (write a bit)')
+        try:
+            slave.write_bit(args.address, args.bit_value)
+            print('write ok')
+        except ValueError:
+            sys.exit('bit write error')
+    elif args.function == 6:
+        if args.word_value is None:
+            raise argparse.ArgumentTypeError('word-value must be set for function 6 (write a word)')
+        try:
+            slave.write_register(args.address, args.word_value)
+            print('write ok')
+        except ValueError:
+            sys.exit('word write error')

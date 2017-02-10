@@ -190,7 +190,7 @@ class FrmTab1(FrmTab):
         if self.app.serial.parity.get() != 'N':
             self.cmd_cap.set(self.cmd_cap.get() + ' -p %s' % self.app.serial.parity.get())
         if self.app.serial.stop.get() != '1':
-            self.cmd_cap.set(self.cmd_cap.get() + ' -s %s' % self.app.serial.stop.get())
+            self.cmd_cap.set(self.cmd_cap.get() + ' --bit-stop %s' % self.app.serial.stop.get())
         self.ent1.delete(0, tk.END)
         self.ent1.insert(0, self.cmd_cap)
         # valid button if cmd cap ok
