@@ -7,6 +7,8 @@ import os
 # some const
 DEV_ID2NAME = {'RS232': 'RS232', 'RS485': 'RS485', 'RS422': 'RS422',
                'usb-Arduino': 'Arduino', 'FTDI_UT232R': 'RS232 DB9'}
+F_CODES = ['1 (lecture bit)', '2 (lecture bit)', '3 (lecture mot)', '4 (lecture mot)',
+           '5 (écriture d\'un bit)', '6 (écriture d\'un mot)']
 
 
 class Serial(object):
@@ -71,8 +73,8 @@ class TkApp(tk.Tk):
         # self.geometry('800x400')
         # build a notebook with tabs
         self.note = ttk.Notebook(self)
-        self.tab1 = FrmTab1(self.note)
-        self.tab2 = FrmTab2(self.note)
+        self.tab1 = FrmCap(self.note)
+        self.tab2 = FrmReq(self.note)
         self.note.add(self.tab1, text='Capture')
         self.note.add(self.tab2, text='Requêtes')
         self.note.pack(fill=tk.BOTH, expand=tk.YES)
@@ -83,7 +85,7 @@ class TkApp(tk.Tk):
 
 
 class SerialFrm(FrmTab):
-    def __init__(self, notebook, serial, update_ms=500, *args, **kwargs):
+    def __init__(self, notebook, serial, update_ms=1000, *args, **kwargs):
         FrmTab.__init__(self, notebook, update_ms, *args, **kwargs)
         # some vars
         self.d_serial_dev = {}
@@ -91,17 +93,15 @@ class SerialFrm(FrmTab):
         self.serial = serial
         self.cmd_cap = tk.StringVar()
         # widget
-        self.frm = tk.Frame(self)
-        self.frm.pack(fill=tk.BOTH, expand=tk.YES)
         # device
-        self.lbfrm1 = tk.LabelFrame(self.frm, text='Port')
+        self.lbfrm1 = tk.LabelFrame(self, text='Port')
         self.lbfrm1.grid(row=0, rowspan=2, column=0, sticky=tk.NSEW, padx=5, pady=5)
-        self.lst1 = tk.Listbox(self.lbfrm1)
+        self.lst1 = tk.Listbox(self.lbfrm1, width=25)
         self.lst1.pack(fill=tk.BOTH, expand=tk.YES)
         self.lst1.bind('<<ListboxSelect>>', self.on_dev_select)
         # baudrate
-        self.lbfrm2 = tk.LabelFrame(self.frm, text='Baudrate')
-        self.lbfrm2.grid(row=0, rowspan=2, column=1, sticky=tk.NSEW, padx=5, pady=5)
+        self.lbfrm2 = tk.LabelFrame(self, text='Baudrate')
+        self.lbfrm2.grid(row=0, rowspan=2, column=1, sticky=tk.NSEW, padx=5, pady=5, ipadx=10)
         tk.Radiobutton(self.lbfrm2, text='1200', variable=self.serial.baudrate, value='1200').pack(anchor=tk.W)
         tk.Radiobutton(self.lbfrm2, text='2400', variable=self.serial.baudrate, value='2400').pack(anchor=tk.W)
         tk.Radiobutton(self.lbfrm2, text='4800', variable=self.serial.baudrate, value='4800').pack(anchor=tk.W)
@@ -111,16 +111,16 @@ class SerialFrm(FrmTab):
         tk.Radiobutton(self.lbfrm2, text='57600', variable=self.serial.baudrate, value='57600').pack(anchor=tk.W)
         tk.Radiobutton(self.lbfrm2, text='115200', variable=self.serial.baudrate, value='115200').pack(anchor=tk.W)
         # parity
-        self.lbfrm3 = tk.LabelFrame(self.frm, text='Parité')
-        self.lbfrm3.grid(row=0, column=2, sticky=tk.NSEW, padx=5, pady=5)
+        self.lbfrm3 = tk.LabelFrame(self, text='Parité')
+        self.lbfrm3.grid(row=0, column=2, sticky=tk.NSEW, padx=5, pady=5, ipadx=10)
         tk.Radiobutton(self.lbfrm3, text='Aucune', variable=self.serial.parity, value='N').pack(anchor=tk.W)
         tk.Radiobutton(self.lbfrm3, text='Paire', variable=self.serial.parity, value='E').pack(anchor=tk.W)
         tk.Radiobutton(self.lbfrm3, text='Impaire', variable=self.serial.parity, value='O').pack(anchor=tk.W)
         tk.Radiobutton(self.lbfrm3, text='Espace', variable=self.serial.parity, value='S').pack(anchor=tk.W)
         tk.Radiobutton(self.lbfrm3, text='Marque', variable=self.serial.parity, value='M').pack(anchor=tk.W)
         # stop bit
-        self.lbfrm4 = tk.LabelFrame(self.frm, text='Bit de Stop')
-        self.lbfrm4.grid(row=1, column=2, sticky=tk.NSEW, padx=5, pady=5)
+        self.lbfrm4 = tk.LabelFrame(self, text='Bit de Stop')
+        self.lbfrm4.grid(row=1, column=2, sticky=tk.NSEW, padx=5, pady=5, ipadx=10)
         tk.Radiobutton(self.lbfrm4, text='1', variable=self.serial.stop, value='1').pack(anchor=tk.W)
         tk.Radiobutton(self.lbfrm4, text='1.5', variable=self.serial.stop, value='1.5').pack(anchor=tk.W)
         tk.Radiobutton(self.lbfrm4, text='2', variable=self.serial.stop, value='2').pack(anchor=tk.W)
@@ -158,26 +158,23 @@ class SerialFrm(FrmTab):
             pass
 
 
-class FrmTab1(FrmTab):
+class FrmCap(FrmTab):
     def __init__(self, notebook, update_ms=500, *args, **kwargs):
         FrmTab.__init__(self, notebook, update_ms, *args, **kwargs)
         # some vars
         self.cmd_cap = tk.StringVar()
         # serial frame
         self.ser_f = SerialFrm(self, serial=self.app.serial)
-        self.ser_f.pack(fill=tk.BOTH, expand=tk.YES)
-        # capture frame
-        self.cap_f = tk.Frame(self)
-        self.cap_f.pack(fill=tk.BOTH, expand=tk.YES)
+        self.ser_f.grid(row=0, sticky=tk.NSEW)
         # command area
-        self.ent1 = tk.Entry(self.cap_f, width=60, state='readonly', textvariable=self.cmd_cap,
+        self.ent1 = tk.Entry(self, width=80, state='readonly', textvariable=self.cmd_cap,
                              readonlybackground='pale green')
-        self.ent1.grid(row=0, column=0, sticky=tk.NSEW)
+        self.ent1.grid(row=1, sticky=tk.NSEW)
         # start command
-        self.but1 = tk.Button(self.cap_f, text='Lancer la capture', state='disabled',
+        self.but1 = tk.Button(self, text='Lancer la capture', state='disabled',
                               command=lambda: os.system('xterm -title \'Capture modbus\' -e \'%s\' &'
                                                         % self.cmd_cap.get()))
-        self.but1.grid(row=1, column=0, sticky=tk.NSEW)
+        self.but1.grid(row=2, sticky=tk.NSEW)
         # install callback
         self.app.serial.add_on_change(self.on_serial_update)
 
@@ -191,8 +188,6 @@ class FrmTab1(FrmTab):
             self.cmd_cap.set(self.cmd_cap.get() + ' -p %s' % self.app.serial.parity.get())
         if self.app.serial.stop.get() != '1':
             self.cmd_cap.set(self.cmd_cap.get() + ' --bit-stop %s' % self.app.serial.stop.get())
-        self.ent1.delete(0, tk.END)
-        self.ent1.insert(0, self.cmd_cap)
         # valid button if cmd cap ok
         if self.cmd_cap:
             self.but1.configure(state='normal')
@@ -200,19 +195,133 @@ class FrmTab1(FrmTab):
             self.but1.configure(state='disabled')
 
 
-class FrmTab2(FrmTab):
+class FrmReq(FrmTab):
     def __init__(self, notebook, update_ms=500, *args, **kwargs):
         FrmTab.__init__(self, notebook, update_ms, *args, **kwargs)
         # some vars
         self.cmd_cap = tk.StringVar()
+        self.slave_ad = tk.IntVar(value=1)
+        self.mbus_ad = tk.IntVar(value=0)
+        self.w_value = tk.IntVar(value=0)
+        self.w_bit = 0
+        self.w_word = 0
+        self.f_code = tk.StringVar()
+        self.f_code_int = 0
         # serial frame
         self.ser_f = SerialFrm(self, serial=self.app.serial)
-        self.ser_f.pack(fill=tk.BOTH, expand=tk.YES)
+        self.ser_f.grid(row=0, column=0, sticky=tk.NS + tk.W)
+        # capture frame
+        self.lbfrm1 = tk.LabelFrame(self, text='Modbus')
+        self.lbfrm1.grid(row=0, column=1, sticky=tk.NSEW, padx=5, pady=5, ipadx=30)
+        self.lbl_slv = tk.Label(self.lbfrm1, text='@ escalve')
+        self.lbl_slv.grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
+        self.sp_slv = tk.Spinbox(self.lbfrm1, from_=1, to=254, width=3, validate='all', textvariable=self.slave_ad)
+        self.sp_slv.grid(row=0, column=1, sticky=tk.W, padx=5, pady=5)
+        self.lbl_ad = tk.Label(self.lbfrm1, text='@ modbus')
+        self.lbl_ad.grid(row=1, column=0, sticky=tk.W, padx=5, pady=5)
+        self.sp_mad = tk.Spinbox(self.lbfrm1,  from_=0, to=65535, width=5, textvariable=self.mbus_ad)
+        self.sp_mad.grid(row=1, column=1, sticky=tk.W, padx=5, pady=5)
+        self.lbl_ad = tk.Label(self.lbfrm1, text='fonction')
+        self.lbl_ad.grid(row=2, column=0, sticky=tk.W, padx=5, pady=5)
+        self.cbb_f = ttk.Combobox(self.lbfrm1, textvariable=self.f_code, values=F_CODES)
+        self.cbb_f.current(newindex=0)
+        self.cbb_f.grid(row=2, column=1, sticky=tk.W, padx=5, pady=5)
+        self.lbl_wvl = tk.Label(self.lbfrm1, text='valeur (écriture)')
+        self.lbl_wvl.grid(row=3, column=0, sticky=tk.W, padx=5, pady=5)
+        self.sp_wvl = tk.Spinbox(self.lbfrm1,  from_=0, to=65535, width=5, textvariable=self.w_value)
+        self.sp_wvl.grid(row=3, column=1, sticky=tk.W, padx=5, pady=5)
+        self.but_req = tk.Button(self.lbfrm1, text='Création de la requête', command=self.build_request)
+        self.but_req.grid(row=4, column=0, columnspan=2, sticky=tk.EW, padx=5, pady=10)
+        # command frame
+        self.req_f = tk.Frame(self)
+        self.req_f.grid(row=1, column=0, columnspan=2, sticky=tk.NSEW)
+        # command area
+        self.ent_cmd = tk.Entry(self, width=80, state='readonly', textvariable=self.cmd_cap,
+                                readonlybackground='pale green')
+        self.ent_cmd.grid(row=1, column=0, columnspan=2, sticky=tk.NSEW)
+        # start command
+        self.but1 = tk.Button(self, text='Lancer la requête', state='disabled',
+                              command=lambda: os.system('xterm -title \'Requete modbus\' -e \'%s |less\' &'
+                                                        % self.cmd_cap.get()))
+        self.but1.grid(row=2, column=0, columnspan=2, sticky=tk.NSEW)
         # install callback
-        self.app.serial.add_on_change(self.on_serial_update)
+        self.app.serial.add_on_change(self.on_widget_change)
+        self.slave_ad.trace('w', self.on_widget_change)
+        self.mbus_ad.trace('w', self.on_widget_change)
+        self.f_code.trace('w', self.on_widget_change)
+        self.w_value.trace('w', self.on_widget_change)
 
-    def on_serial_update(self):
-        print(self.app.serial.device.get())
+    def on_widget_change(self, *args):
+        self.cmd_cap.set('')
+        self.but1.configure(state='disabled')
+
+    def build_request(self):
+        is_ok = True
+        # check slave address
+        try:
+            if 1 <= int(self.slave_ad.get()) <= 254:
+                self.sp_slv.config(bg='white')
+            else:
+                raise ValueError()
+        except (ValueError, tk.TclError):
+            self.sp_slv.config(bg='red')
+            is_ok = False
+        # check modbus address
+        try:
+            if 0 <= int(self.mbus_ad.get()) <= 65535:
+                self.sp_mad.config(bg='white')
+            else:
+                raise ValueError()
+        except (ValueError, tk.TclError):
+            self.sp_mad.config(bg='red')
+            is_ok = False
+        # check function code
+        try:
+            self.f_code_int = int(self.cbb_f.get().split(' ')[0])
+        except:
+            is_ok = False
+        # check modbus value to write
+        try:
+            if self.f_code_int == 5:
+                if int(self.w_value.get()) in [0, 1]:
+                    self.w_bit = int(self.w_value.get())
+                    self.sp_wvl.config(bg='white')
+                else:
+                    raise ValueError()
+            elif self.f_code_int == 6:
+                if 0 <= int(self.w_value.get()) <= 65535:
+                    self.w_word = int(self.w_value.get())
+                    self.sp_wvl.config(bg='white')
+                else:
+                    raise ValueError()
+        except (ValueError, tk.TclError):
+            self.sp_wvl.config(bg='red')
+            is_ok = False
+        # format command
+        if is_ok:
+            # update cmd cap
+            self.cmd_cap.set('modbus-request-serial -d %s' % self.app.serial.device.get())
+            # add params if not as default
+            if self.app.serial.baudrate.get() != '9600':
+                self.cmd_cap.set(self.cmd_cap.get() + ' -b %s' % self.app.serial.baudrate.get())
+            if self.app.serial.parity.get() != 'N':
+                self.cmd_cap.set(self.cmd_cap.get() + ' -p %s' % self.app.serial.parity.get())
+            if self.app.serial.stop.get() != '1':
+                self.cmd_cap.set(self.cmd_cap.get() + ' --bit-stop %s' % self.app.serial.stop.get())
+            if self.slave_ad.get() != 1:
+                self.cmd_cap.set(self.cmd_cap.get() + ' -s %s' % self.slave_ad.get())
+            if self.mbus_ad.get() != 0:
+                self.cmd_cap.set(self.cmd_cap.get() + ' -a %s' % self.mbus_ad.get())
+            if self.f_code_int != 1:
+                self.cmd_cap.set(self.cmd_cap.get() + ' -f %s' % self.f_code_int)
+            if self.f_code_int == 5:
+                self.cmd_cap.set(self.cmd_cap.get() + ' --bit-value %s' % self.w_bit)
+            if self.f_code_int == 6:
+                self.cmd_cap.set(self.cmd_cap.get() + ' --word-value %s' % self.w_word)
+            # valid button if cmd cap ok
+            if self.cmd_cap:
+                self.but1.configure(state='normal')
+
 
 if __name__ == '__main__':
     # main Tk App
