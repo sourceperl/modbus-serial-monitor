@@ -5,7 +5,7 @@ Modbus/RTU python monitor: check serial frame between devices.
 
 Format modbus RTU serial frames receive from a serial port to console stdout.
 
-Test with python2.7 and python3.
+Test with python3.
 
 ## Synoptic
 
