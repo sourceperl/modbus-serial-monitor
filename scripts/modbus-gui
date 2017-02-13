@@ -70,7 +70,7 @@ class TkApp(tk.Tk):
         # configure main window
         self.wm_title('Analyse modbus RTU')
         # self.attributes('-fullscreen', True)
-        # self.geometry('800x400')
+        #self.geometry('800x400')
         # build a notebook with tabs
         self.note = ttk.Notebook(self)
         self.tab1 = FrmCap(self.note)
@@ -165,16 +165,16 @@ class FrmCap(FrmTab):
         self.cmd_cap = tk.StringVar()
         # serial frame
         self.ser_f = SerialFrm(self, serial=self.app.serial)
-        self.ser_f.grid(row=0, sticky=tk.NSEW)
+        self.ser_f.pack(anchor=tk.W, fill=tk.X)
         # command area
-        self.ent1 = tk.Entry(self, width=80, state='readonly', textvariable=self.cmd_cap,
+        self.ent1 = tk.Entry(self, width=50, state='readonly', textvariable=self.cmd_cap,
                              readonlybackground='pale green')
-        self.ent1.grid(row=1, sticky=tk.NSEW)
+        self.ent1.pack(anchor=tk.W, fill=tk.X)
         # start command
         self.but1 = tk.Button(self, text='Lancer la capture', state='disabled',
                               command=lambda: os.system('xterm -title \'Capture modbus\' -e \'%s\' &'
                                                         % self.cmd_cap.get()))
-        self.but1.grid(row=2, sticky=tk.NSEW)
+        self.but1.pack(anchor=tk.W, fill=tk.X)
         # install callback
         self.app.serial.add_on_change(self.on_serial_update)
 
