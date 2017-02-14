@@ -300,7 +300,7 @@ class FrmReq(FrmTab):
         # format command
         if is_ok:
             # update cmd cap
-            self.cmd_cap.set('modbus-request-serial -d %s' % self.app.serial.device.get())
+            self.cmd_cap.set('modbus-request-serial -t 1.0 -d %s' % self.app.serial.device.get())
             # add params if not as default
             if self.app.serial.baudrate.get() != '9600':
                 self.cmd_cap.set(self.cmd_cap.get() + ' -b %s' % self.app.serial.baudrate.get())

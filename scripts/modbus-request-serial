@@ -91,6 +91,8 @@ if __name__ == '__main__':
                         help='bit value to write')
     parser.add_argument('--word-value', type=check_word, default=None,
                         help='word value to write')
+    parser.add_argument('-t', '--timeout', type=float, default=None,
+                        help='timeout for response (value in s)')
     parser.add_argument('-w', '--wait', type=float, default=0.0,
                         help='wait time between open serial port and request (default is 0)')
     parser.add_argument('--debug', action='store_true', default=False,
@@ -106,6 +108,10 @@ if __name__ == '__main__':
     # debug mode
     if args.debug:
         slave.debug = True
+
+    # read serial timeout
+    if args.timeout is not None:
+        slave.serial.timeout = args.timeout
 
     # wait time after serial open
     time.sleep(args.wait)
