@@ -86,7 +86,7 @@ class FrmMain(FrmTab):
         FrmTab.__init__(self, notebook, update_ms, *args, **kwargs)
         # some vars
         self.hex_str = tk.StringVar(value='00000000')
-        self.value_str = tk.StringVar(value='0')
+        self.value_str = tk.StringVar(value='0.0')
         self.fmt_str = tk.StringVar()
         self.data_fmt = ''
         # install callback
@@ -94,7 +94,7 @@ class FrmMain(FrmTab):
         # capture frame
         self.frm1 = tk.Frame(self)
         self.frm1.grid(row=0, column=0, sticky=tk.NSEW, padx=5, pady=5)
-        self.lbl_dat = tk.Label(self.frm1, text='Data (format hexa)')
+        self.lbl_dat = tk.Label(self.frm1, text='Données brutes (format hexa)')
         self.lbl_dat.grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
         self.ent_hex = tk.Entry(self.frm1, width=16, validate='all', textvariable=self.hex_str)
         self.ent_hex.grid(row=0, column=1, sticky=tk.W, padx=5, pady=5)
@@ -107,9 +107,9 @@ class FrmMain(FrmTab):
         self.cbb_fmt = ttk.Combobox(self.frm1, textvariable=self.fmt_str, values=FORMATS, width=25)
         self.cbb_fmt.current(newindex=0)
         self.cbb_fmt.grid(row=2, column=1, sticky=tk.W, padx=5, pady=5)
-        self.but_to_value = tk.Button(self.frm1, text='Convertion data > valeur', command=self.data_to_value)
+        self.but_to_value = tk.Button(self.frm1, text='Convertion données > valeur', command=self.data_to_value)
         self.but_to_value.grid(row=3, column=0, sticky=tk.EW, padx=5, pady=5)
-        self.but_to_hex = tk.Button(self.frm1, text='Convertion valeur > data', command=self.value_to_data)
+        self.but_to_hex = tk.Button(self.frm1, text='Convertion valeur > données', command=self.value_to_data)
         self.but_to_hex.grid(row=3, column=1, sticky=tk.EW, padx=5, pady=5)
 
     def on_data_fmt_change(self, *args):
@@ -144,7 +144,7 @@ class FrmMain(FrmTab):
     def value_to_data(self):
         if self.data_fmt == 'LONG':
             try:
-                self.hex_str.set(long_to_hex(int(self.value_str.get())))
+                self.hex_str.set(long_to_hex(int(float(self.value_str.get()))))
                 self.ent_val.config(bg='white')
             except ValueError:
                 self.ent_val.config(bg='red')
