@@ -231,7 +231,9 @@ class FrmReq(FrmTab):
         self.sp_wvl = tk.Spinbox(self.lbfrm1,  from_=0, to=65535, width=5, textvariable=self.w_value)
         self.sp_wvl.grid(row=3, column=1, sticky=tk.W, padx=5, pady=5)
         self.but_req = tk.Button(self.lbfrm1, text='Création de la requête', command=self.build_request)
-        self.but_req.grid(row=4, column=0, columnspan=2, sticky=tk.EW, padx=5, pady=10)
+        self.but_req.grid(row=4, column=0, columnspan=2, sticky=tk.EW, padx=5, pady=3)
+        self.but_conv = tk.Button(self.lbfrm1, text='Outil de conversion', command=lambda: os.system('conv-data-gui&'))
+        self.but_conv.grid(row=5, column=0, columnspan=2, sticky=tk.EW, padx=5, pady=3)
         # command frame
         self.req_f = tk.Frame(self)
         self.req_f.grid(row=1, column=0, columnspan=2, sticky=tk.NSEW)
