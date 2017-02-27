@@ -20,5 +20,6 @@ setup(
         'scripts/modbus-scan-serial',
         'scripts/modbus-request-serial',
         'scripts/modbus-gui',
+        'scripts/conv-data-gui',
     ],
 )
