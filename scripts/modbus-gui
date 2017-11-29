@@ -69,8 +69,7 @@ class TkApp(tk.Tk):
         self.serial = Serial()
         # configure main window
         self.wm_title('Analyse modbus RTU')
-        # self.attributes('-fullscreen', True)
-        #self.geometry('800x400')
+        self.resizable(False, False)
         # build a notebook with tabs
         self.note = ttk.Notebook(self)
         self.tab1 = FrmCap(self.note)

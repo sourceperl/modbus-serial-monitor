@@ -70,8 +70,7 @@ class TkApp(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
         # configure main window
         self.wm_title('Convertion format de donnée')
-        # self.attributes('-fullscreen', True)
-        # self.geometry('800x400')
+        self.resizable(False, False)
         # build a notebook with tabs
         self.fMain = FrmMain(self)
         self.fMain.pack(fill=tk.BOTH, expand=tk.YES)
