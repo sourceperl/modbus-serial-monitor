@@ -212,7 +212,7 @@ class FrmReq(FrmTab):
         # capture frame
         self.lbfrm1 = tk.LabelFrame(self, text='Modbus')
         self.lbfrm1.grid(row=0, column=1, sticky=tk.NSEW, padx=5, pady=5, ipadx=30)
-        self.lbl_slv = tk.Label(self.lbfrm1, text='@ escalve')
+        self.lbl_slv = tk.Label(self.lbfrm1, text='@ esclave')
         self.lbl_slv.grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
         self.sp_slv = tk.Spinbox(self.lbfrm1, from_=1, to=254, width=3, validate='all', textvariable=self.slave_ad)
         self.sp_slv.grid(row=0, column=1, sticky=tk.W, padx=5, pady=5)
