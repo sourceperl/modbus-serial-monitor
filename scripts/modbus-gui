@@ -53,6 +53,10 @@ class FrmTab(tk.Frame):
         self.bind('<Visibility>', lambda evt: self.tab_update())
         self._tab_update()
 
+    def copy_to_clipboard(self, content):
+        self.clipboard_clear()
+        self.clipboard_append(content)
+
     def _tab_update(self):
         if self.winfo_ismapped():
             self.tab_update()
@@ -174,6 +178,9 @@ class FrmCap(FrmTab):
                               command=lambda: os.system('xterm -title \'Capture modbus\' -e \'%s\' &'
                                                         % self.cmd_cap.get()))
         self.but1.pack(anchor=tk.W, fill=tk.X)
+        self.but2 = tk.Button(self, text='Copier la commande dans le presse papier', state='disabled',
+                              command=lambda: self.copy_to_clipboard(self.cmd_cap.get()))
+        self.but2.pack(anchor=tk.W, fill=tk.X)
         # install callback
         self.app.serial.add_on_change(self.on_serial_update)
 
@@ -190,8 +197,10 @@ class FrmCap(FrmTab):
         # valid button if cmd cap ok
         if self.cmd_cap:
             self.but1.configure(state='normal')
+            self.but2.configure(state='normal')
         else:
             self.but1.configure(state='disabled')
+            self.but2.configure(state='disabled')
 
 
 class FrmReq(FrmTab):
@@ -245,6 +254,9 @@ class FrmReq(FrmTab):
                               command=lambda: os.system('xterm -title \'Requete modbus\' -e \'%s |less\' &'
                                                         % self.cmd_cap.get()))
         self.but1.grid(row=2, column=0, columnspan=2, sticky=tk.NSEW)
+        self.but2 = tk.Button(self, text='Copier la commande dans le presse papier', state='disabled',
+                              command=lambda: self.copy_to_clipboard(self.cmd_cap.get()))
+        self.but2.grid(row=3, column=0, columnspan=2, sticky=tk.NSEW)
         # install callback
         self.app.serial.add_on_change(self.on_widget_change)
         self.slave_ad.trace('w', self.on_widget_change)
@@ -255,6 +267,7 @@ class FrmReq(FrmTab):
     def on_widget_change(self, *args):
         self.cmd_cap.set('')
         self.but1.configure(state='disabled')
+        self.but2.configure(state='disabled')
 
     def build_request(self):
         is_ok = True
@@ -301,7 +314,7 @@ class FrmReq(FrmTab):
         # format command
         if is_ok:
             # update cmd cap
-            self.cmd_cap.set('modbus-request-serial -t 1.0 -d %s' % self.app.serial.device.get())
+            self.cmd_cap.set('modbus-request-serial -d %s -t 1.0' % self.app.serial.device.get())
             # add params if not as default
             if self.app.serial.baudrate.get() != '9600':
                 self.cmd_cap.set(self.cmd_cap.get() + ' -b %s' % self.app.serial.baudrate.get())
@@ -322,6 +335,7 @@ class FrmReq(FrmTab):
             # valid button if cmd cap ok
             if self.cmd_cap:
                 self.but1.configure(state='normal')
+                self.but2.configure(state='normal')
 
 
 if __name__ == '__main__':
