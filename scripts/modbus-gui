@@ -186,7 +186,7 @@ class FrmCap(FrmTab):
 
     def on_serial_update(self):
         # update cmd cap
-        self.cmd_cap.set('modbus-scan-serial -d %s' % self.app.serial.device.get())
+        self.cmd_cap.set('modbus-scan-serial -d %s -t 0.02' % self.app.serial.device.get())
         # add params if not as default
         if self.app.serial.baudrate.get() != '9600':
             self.cmd_cap.set(self.cmd_cap.get() + ' -b %s' % self.app.serial.baudrate.get())
