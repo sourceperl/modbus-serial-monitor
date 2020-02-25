@@ -21,7 +21,7 @@ DATE=2015-11-05T17:31:27.977;ERR=NO;FRAME=01-03-50-00-00-04-55-09;SLAVE=1;
 
 E.g. in Debian based dists, install package:
 
-sudo apt-get install python3-setuptools
+    $ sudo apt-get install python3-setuptools
 
 ## Setup
 
