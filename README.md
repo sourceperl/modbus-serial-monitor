@@ -41,3 +41,7 @@ Store all traffic on modbus.log file
 
     $ modbus-scan-serial > modbus.log
 
+## Use it with docker
+
+    $ docker build -t modbus-serial-monitor .
+    $ docker run -it --device=/dev/ttyUSB2:/dev/ttyUSB2:rwm -e "DEVICE=/dev/ttyUSB2" -e "BAUDRATE=460800" modbus-serial-monitor
